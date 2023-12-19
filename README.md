@@ -1,11 +1,11 @@
 # Linux From Scratch - v12.0
-This repository contains my development log while building Linux from scratch following the [Linux From Scratch](https://www.linuxfromscratch.org/lfs/view/stable/index.html) guide.
+This repository contains my development log while following the [Linux From Scratch](https://www.linuxfromscratch.org/lfs/view/stable/index.html) guide.
 
 ## BOOT
 ![Boot](./demo_boot.gif)
 
 ## Neofetch :)
-![Neofetch Screenshot](./neofetch.gif)
+![Neofetch](./neofetch.gif)
 
 ## Preparing the build VM  
 I used Xubuntu-22 as the base OS to build `LFS` on a separate VDI disk on virtual box
