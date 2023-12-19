@@ -1,7 +1,26 @@
 # Linux From Scratch - v12.0
+This repository contains my development log while building Linux from scratch following the [Linux From Scratch](https://www.linuxfromscratch.org/lfs/view/stable/index.html) guide.
 
-## prepare the VM 
+## BOOT
+![Boot](./demo_boot.gif)
+
+## Neofetch :)
+![Neofetch Screenshot](./neofetch.gif)
+
+## Preparing the build VM  
+I used Xubuntu-22 as the base OS to build `LFS` on a separate VDI disk on virtual box
+
+### VM Specifications
+- Virtualization Platform: VirtualBox
+- Base System OS: xubuntu-22.04.2-desktop-amd64
+- Base memory: 3072 MB
+- Processors: 1 CPU
+- Hard Disks Attached
+  - `xubuntu_1.vdi` - 30GB VDI
+  - `linuxfromscratch.vdi` - 30GB VDI
+
 ## II. Preparing for the Build 
+
 ### Chapter 2. Preparing the Host System 
 
 #### 2.2 Host System Requirements 
@@ -2792,3 +2811,145 @@ CLOCKPARAMS=
 EOF
 ```
 
+ #### 9.8. Creating the /etc/inputrc File
+ ```shell
+(Ifs chroot) root:/sources# cat > /etc/inputrc << "EOF"
+# Begin /etc/inputrc
+# Modified by Chris Lynn <roryo@roryo.dynup.net>
+
+# Allow the command prompt to wrap to the next line
+set horizontal-scroll-mode Off
+
+# Enable 8-bit input
+set meta-flag On
+set input-meta On
+
+# Turns off 8th bit stripping
+set convert-meta Off
+
+# Keep the 8th bit for display
+set output-meta On
+
+# none, visible or audible
+set bell-style none
+
+# All of the following map the escape sequence of the value
+# contained in the 1st argument to the readline specific functions
+"\eOd": backward-word
+"\eOc": forward-word
+
+# for linux console
+"\e[1~": beginning-of-line
+"\e[4~": end-of-line
+"\e[5~": beginning-of-history
+"\e[6~": end-of-history
+"\e[3~": delete-char
+"\e[2~": quoted-insert
+
+# for xterm
+"\eOH": beginning-of-line
+"\eOF": end-of-line
+
+# for Konsole
+"\e[H": beginning-of-line
+"\e[F": end-of-line
+
+# End /etc/inputrc
+EOF
+ 
+ ```
+####  9.9. Creating the /etc/shells File 
+ ```shell
+ (Ifs chroot) root:/sources# cat > /etc/shells << "EOF"
+# Begin /etc/shells
+
+/bin/sh
+/bin/bash
+
+# End /etc/shells
+EOF
+ ```
+
+ ### Chapter 10. Making the LFS System Bootable
+ #### 10.2. Creating the /etc/fstab File
+ ```shell
+(Ifs chroot) root:/sources# cat > /etc/fstab << "EOF"
+# Begin /etc/fstab
+
+# file system  mount-point    type     options             dump  fsck
+#                                                                order
+
+/dev/sda1   /              ext4    defaults            1     1
+# /dev/<yyy>     swap           swap     pri=1               0     0
+proc           /proc          proc     nosuid,noexec,nodev 0     0
+sysfs          /sys           sysfs    nosuid,noexec,nodev 0     0
+devpts         /dev/pts       devpts   gid=5,mode=620      0     0
+tmpfs          /run           tmpfs    defaults            0     0
+devtmpfs       /dev           devtmpfs mode=0755,nosuid    0     0
+tmpfs          /dev/shm       tmpfs    nosuid,nodev        0     0
+cgroup2        /sys/fs/cgroup cgroup2  nosuid,noexec,nodev 0     0
+
+# End /etc/fstab
+EOF
+ ```
+
+ #### 10.3. Linux-6.4.12 
+ ```shell
+(lfs chroot) root:/sources# tar xf linux-6.4.12.tar.xz 
+(lfs chroot) root:/sources# cd linux-6.4.12
+(lfs chroot) root:/sources/linux-6.4.12# make mrproper
+(lfs chroot) root:/sources/linux-6.4.12# make menuconfig
+(lfs chroot) root:/sources/linux-6.4.12# make 
+(lfs chroot) root:/sources/linux-6.4.12# make modules_install
+  INSTALL /lib/modules/6.4.12/kernel/fs/efivarfs/efivarfs.ko
+  INSTALL /lib/modules/6.4.12/kernel/drivers/thermal/intel/x86_pkg_temp_thermal.ko
+  INSTALL /lib/modules/6.4.12/kernel/net/netfilter/nf_log_syslog.ko
+  INSTALL /lib/modules/6.4.12/kernel/net/netfilter/xt_mark.ko
+  INSTALL /lib/modules/6.4.12/kernel/net/netfilter/xt_nat.ko
+  INSTALL /lib/modules/6.4.12/kernel/net/netfilter/xt_LOG.ko
+  INSTALL /lib/modules/6.4.12/kernel/net/netfilter/xt_MASQUERADE.ko
+  INSTALL /lib/modules/6.4.12/kernel/net/netfilter/xt_addrtype.ko
+  INSTALL /lib/modules/6.4.12/kernel/net/ipv4/netfilter/iptable_nat.ko
+  DEPMOD  /lib/modules/6.4.12
+(lfs chroot) root:/sources/linux-6.4.12# cp -iv arch/x86/boot/bzImage /boot/vmlinuz-6.4.12-lfs-12.0
+'arch/x86/boot/bzImage' -> '/boot/vmlinuz-6.4.12-lfs-12.0'
+(lfs chroot) root:/sources/linux-6.4.12# cp -iv System.map /boot/System.map-6.4.12
+'System.map' -> '/boot/System.map-6.4.12'
+(lfs chroot) root:/sources/linux-6.4.12# cp -iv .config /boot/config-6.4.12
+'.config' -> '/boot/config-6.4.12'
+(lfs chroot) root:/sources/linux-6.4.12# cp -r Documentation -T /usr/share/doc/linux-6.4.12
+(lfs chroot) root:/sources/linux-6.4.12# cd ../
+(lfs chroot) root:/sources# chown -R 0:0 linux-6.4.12
+(lfs chroot) root:/sources# install -v -m755 -d /etc/modprobe.d
+cat > /etc/modprobe.d/usb.conf << "EOF"
+# Begin /etc/modprobe.d/usb.conf
+
+install ohci_hcd /sbin/modprobe ehci_hcd ; /sbin/modprobe -i ohci_hcd ; true
+install uhci_hcd /sbin/modprobe ehci_hcd ; /sbin/modprobe -i uhci_hcd ; true
+
+# End /etc/modprobe.d/usb.conf
+EOF
+install: creating directory '/etc/modprobe.d'
+
+ ```
+
+ ####  10.4. Using GRUB to Set Up the Boot Process 
+ ```shell
+ (lfs chroot) root:/# grub-install /dev/sdb
+Installing for i386-pc platform.
+Installation finished. No error reported.
+(lfs chroot) root:/# cat > /boot/grub/grub.cfg << "EOF"
+# Begin /boot/grub/grub.cfg
+set default=0
+set timeout=5
+
+insmod part_gpt
+insmod ext2
+search --set=root --fs-uuid 52099d7c-4b1a-46dc-8340-344583a09fc7
+menuentry "GNU/Linux, Linux 6.4.12-lfs-12.0" {
+        linux   /boot/vmlinuz-6.4.12-lfs-12.0 root=PARTUUID=44897e07-0a71-0141-afae-252c057d9876 ro
+}
+EOF
+(lfs chroot) root:/# 
+
+ ```
