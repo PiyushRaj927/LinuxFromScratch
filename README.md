@@ -1,6 +1,7 @@
 # Linux From Scratch - v12.0
 This repository contains my development log while following the [Linux From Scratch](https://www.linuxfromscratch.org/lfs/view/stable/index.html) guide.
 
+`LFS ID: 30340`
 ## BOOT
 ![Boot](./demo_boot.gif)
 
